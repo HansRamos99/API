@@ -1,0 +1,19 @@
+/* cuenta de admin django
+hans
+psicologos*/
+
+/*
+Para correr el programa, 
+instalar un entorno virtual (virtualenv)
+
+activar entorno virtual
+
+correr pip install django djangorestframework djangorestframework-simplejwt 
+django-model-utils
+
+ubicarse en la carpeta raiz (donde se encuentra el archivo manage.py) y correr
+python manage.py runserver 
+
+:D
+*/
+
