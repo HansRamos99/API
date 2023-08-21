@@ -163,8 +163,8 @@ class CitasView(View):
         
         else:
 
-            if(redis_instance.exists('citas')):
-                
+            if(redis_instance.exists('citas') and USAR_REDIS):
+                print("usando redis")
                 datos = redis_instance.get('citas')
                 datos = json.loads(datos.decode('utf-8'))
 
