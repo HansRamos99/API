@@ -162,7 +162,7 @@ class CitasView(View):
             return JsonResponse(datos)
         
         else:
-            print("variable de entorno ---> "+USAR_REDIS)
+            print("variable de entorno USAR_REDIS ---> "+str(USAR_REDIS))
 
             if(redis_instance.exists('citas') and USAR_REDIS):
                 print("usando redis")
