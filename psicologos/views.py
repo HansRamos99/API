@@ -14,7 +14,12 @@ import time
 import redis
 redis_instance = redis.StrictRedis(host='127.0.0.1', port=6379, db=1)
 
-USAR_REDIS= bool(os.environ.get("USAR_REDIS"))
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
+
+USAR_REDIS= env("USAR_REDIS")
 
 
 # Create your views here.
