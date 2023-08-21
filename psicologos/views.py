@@ -19,7 +19,7 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
-USAR_REDIS= env("USAR_REDIS")
+USAR_REDIS= bool(env("USAR_REDIS"))
 
 
 # Create your views here.
