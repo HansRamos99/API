@@ -14,7 +14,7 @@ import time
 import redis
 redis_instance = redis.StrictRedis(host='127.0.0.1', port=6379, db=1)
 
-USAR_REDIS= os.environ.get("USAR_REDIS")
+USAR_REDIS= bool(os.environ.get("USAR_REDIS"))
 
 
 # Create your views here.
@@ -163,6 +163,7 @@ class CitasView(View):
         
         else:
             print("variable de entorno ---> "+USAR_REDIS)
+
             if(redis_instance.exists('citas') and USAR_REDIS):
                 print("usando redis")
                 datos = redis_instance.get('citas')
