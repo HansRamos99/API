@@ -29,10 +29,11 @@ class Psicologo(models.Model):
     descripcion=models.TextField()
     sector=models.CharField(max_length=2, choices=SECTOR)
 
+
 class Paciente(models.Model):
     nombre=models.CharField(max_length=50)
     descripcion=models.TextField()
-    
+
 
 class Cita(models.Model):
     inicio_cita=models.DateTimeField()

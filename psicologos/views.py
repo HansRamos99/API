@@ -5,18 +5,51 @@ from django.http.response import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import json
+from rest_framework.response import Response
 from datetime import datetime
+
+import os
+from django.core.cache import cache
+import time
+import redis
+redis_instance = redis.StrictRedis(host='127.0.0.1', port=6379, db=1)
+
+USAR_REDIS= os.environ.get("USAR_REDIS")
 
 
 # Create your views here.
 
 class UsuariosView(View):
     def get (self, request):
+        clave = 'usuarios'
+
+        start_time = time.time()
+        
+        if(redis_instance.exists(clave)):
+            print("se mando por redis")
+            datos = redis_instance.get(clave)
+            datos = json.loads(datos.decode('utf-8'))
+
+            end_time = time.time ()
+            duration = end_time - start_time
+            print ('\n Total time: {:.3f} ms'.format(duration * 1000.0))
+
+            return JsonResponse(datos)
+         
         usuarios=list(Usuario.objects.values())
+
         if len(usuarios)>0:
             datos={'mensaje': 'exito', 'usuarios': usuarios}
+            
         else:
             datos={'mensaje': 'Usuarios no encontrados'}
+
+        print("se mando por sql")
+
+        end_time = time.time ()
+        duration = end_time - start_time
+        print ('\n Total time: {:.3f} ms'.format(duration * 1000.0))
+
         return JsonResponse(datos)
 
 
@@ -102,6 +135,16 @@ class PacientesView(View):
             return JsonResponse(datos)
 
 
+def actualizar_citas():
+    citas=list(Cita.objects.values())
+    for cita in citas:
+                cita["inicio_cita"] = cita["inicio_cita"].strftime('%Y-%m-%dT%H:%M:%SZ')
+                cita["fin_cita"] = cita["fin_cita"].strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    datos={'mensaje': 'exito', 'cita': citas}
+    redis_instance.set("citas", json.dumps(datos))
+
+
 class CitasView(View):
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -119,7 +162,16 @@ class CitasView(View):
             return JsonResponse(datos)
         
         else:
+
+            if(redis_instance.exists('citas')):
+                
+                datos = redis_instance.get('citas')
+                datos = json.loads(datos.decode('utf-8'))
+
+                return JsonResponse(datos)
+
             citas=list(Cita.objects.values())
+        
             if len(citas)>0:
                 datos={'mensaje': 'exito', 'citas': citas}
             else:
@@ -134,7 +186,10 @@ class CitasView(View):
         pac=Paciente.objects.filter(id=jd['paciente_id']).first()
         Cita.objects.create(inicio_cita=datetime.strptime(jd['inicio_cita'], '%Y-%m-%dT%H:%M:%SZ'), fin_cita=datetime.strptime(jd['fin_cita'],'%Y-%m-%dT%H:%M:%SZ'),psicologo=psic, paciente=pac)
         datos={'mensaje':'Exito'}
-        return JsonResponse(datos)      
+        actualizar_citas()
+       
+        return JsonResponse(datos)     
+     
     #Para el put se necesitan los valores inicio_cita, fin_cita, y el id de un paciente 
     def put(self, request, id):
         jd=json.loads(request.body)
@@ -147,6 +202,8 @@ class CitasView(View):
             datos={'mensaje':'exito'}
         else:
             datos={'mensaje': 'cita no encontrada'}
+
+        actualizar_citas()
         return JsonResponse(datos)
 
     def delete(self, request, id):
@@ -157,8 +214,9 @@ class CitasView(View):
 
         else:
             datos={'mensaje': 'No se pudo eliminar'}
-        return JsonResponse(datos)
 
+        actualizar_citas()
+        return JsonResponse(datos)
 
 class RecomendacionesView(View):
 
@@ -206,7 +264,6 @@ class RecomendacionesView(View):
             datos={'mensaje': 'cita no encontrada'}
         return JsonResponse(datos)
 
-    
     def delete(self, request, id=0):
         print(id)
         citas=list(Recomendacion.objects.filter(id=id).values())
